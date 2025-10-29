@@ -1,0 +1,37 @@
+{
+  "stats": [
+    {
+      "id": "today-reservations",
+      "title": "오늘 예약",
+      "value": "12건",
+      "change": "+3건",
+      "isPositive": true,
+      "iconType": "calendar"
+    },
+    {
+      "id": "monthly-reservations",
+      "title": "이번 달 예약",
+      "value": "89건",
+      "change": "+23.1%",
+      "isPositive": true,
+      "iconType": "users"
+    },
+    {
+      "id": "products",
+      "title": "전통주 판매",
+      "value": "456개",
+      "change": "-5.3%",
+      "isPositive": false,
+      "iconType": "package"
+    },
+    {
+      "id": "revenue",
+      "title": "월 매출",
+      "value": "₩15,234,000",
+      "change": "+18.2%",
+      "isPositive": true,
+      "iconType": "trending"
+    }
+  ],
+  "lastUpdated": "2024-01-15T09:00:00Z"
+}
