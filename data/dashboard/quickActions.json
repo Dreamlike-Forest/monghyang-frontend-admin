@@ -1,0 +1,37 @@
+{
+  "actions": [
+    {
+      "id": "new-program",
+      "label": "새 체험 프로그램 등록",
+      "iconType": "wine",
+      "color": "primary",
+      "link": "/programs/create",
+      "enabled": true
+    },
+    {
+      "id": "today-reservations",
+      "label": "오늘 예약 확인",
+      "iconType": "calendar",
+      "color": "secondary",
+      "link": "/reservations/status?date=today",
+      "enabled": true
+    },
+    {
+      "id": "stock-check",
+      "label": "재고 현황 확인",
+      "iconType": "package",
+      "color": "tertiary",
+      "link": "/products/stock",
+      "enabled": true
+    },
+    {
+      "id": "quick-add",
+      "label": "빠른 추가",
+      "iconType": "plus",
+      "color": "quaternary",
+      "link": null,
+      "enabled": true
+    }
+  ],
+  "lastUpdated": "2024-01-15T09:00:00Z"
+}

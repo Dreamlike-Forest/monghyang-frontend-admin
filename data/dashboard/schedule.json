@@ -1,0 +1,56 @@
+{
+  "today": "2024-01-15",
+  "schedules": [
+    {
+      "id": "SCH001",
+      "time": "10:00",
+      "title": "막걸리 빚기 체험",
+      "participants": "김민수 외 3명",
+      "participantCount": 4,
+      "location": "체험관 A",
+      "status": "completed",
+      "color": "green",
+      "reservationId": 1
+    },
+    {
+      "id": "SCH002",
+      "time": "14:00",
+      "title": "양조장 투어",
+      "participants": "박철수 외 5명",
+      "participantCount": 6,
+      "location": "양조장 본관",
+      "status": "ongoing",
+      "color": "blue",
+      "reservationId": 3
+    },
+    {
+      "id": "SCH003",
+      "time": "16:00",
+      "title": "전통주 시음회",
+      "participants": "이영희 외 1명",
+      "participantCount": 2,
+      "location": "시음실",
+      "status": "upcoming",
+      "color": "purple",
+      "reservationId": 2
+    },
+    {
+      "id": "SCH004",
+      "time": "18:00",
+      "title": "특별 강연",
+      "participants": "단체 예약 20명",
+      "participantCount": 20,
+      "location": "세미나실",
+      "status": "upcoming",
+      "color": "orange",
+      "reservationId": null
+    }
+  ],
+  "summary": {
+    "totalSchedules": 4,
+    "completed": 1,
+    "ongoing": 1,
+    "upcoming": 2
+  },
+  "lastUpdated": "2024-01-15T09:00:00Z"
+}
