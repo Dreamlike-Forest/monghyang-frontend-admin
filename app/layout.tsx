@@ -1,9 +1,9 @@
-import type { Metadata } from 'next';
+import { AuthProvider } from '../utils/authUtils';  // 경로 수정
 import './globals.css';
 
-export const metadata: Metadata = {
-  title: '몽향양조장 관리자',
-  description: '몽향양조장 관리자 페이지',
+export const metadata = {
+  title: '몽향의숲 - 관리 시스템',
+  description: '양조장 체험 및 전통주 통합 관리 플랫폼',
 };
 
 export default function RootLayout({
@@ -14,7 +14,9 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <body>
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );

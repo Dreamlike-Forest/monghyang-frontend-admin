@@ -18,8 +18,11 @@
 }
 
 @media (max-width: 768px) {
+  .appContainer {
+    flex-direction: column;
+  }
+
   .mainContent {
     margin-left: 0;
-    width: 100%;
   }
 }
