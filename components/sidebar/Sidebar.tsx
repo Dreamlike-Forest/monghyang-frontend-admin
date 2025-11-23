@@ -1,6 +1,8 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useAuth } from '../../utils/authUtils';
+import { logout as logoutApi } from '../../utils/authApi';
 import styles from './Sidebar.module.css';
 
 interface SidebarProps {
@@ -15,71 +17,14 @@ interface MenuItem {
   subMenu?: MenuItem[];
 }
 
-interface UserData {
-  user: {
-    id: string;
-    user_id: string;
-    email: string;
-    name: string;
-    phone: string;
-    isBreweryRegistered: boolean;
-    createdAt: string;
-  };
-  brewery: any;
-}
-
 export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
+  const { user, logout } = useAuth();
   const [expandedMenus, setExpandedMenus] = useState<string[]>(['experience', 'reservation', 'product']);
-  const [userName, setUserName] = useState('관리자');
-
-  // 사용자 정보 로드
-  useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        const storedData = localStorage.getItem('userData');
-        if (storedData) {
-          const data: UserData = JSON.parse(storedData);
-          if (data.user && data.user.name) {
-            setUserName(data.user.name);
-            return;
-          }
-        }
-
-        // 2. 테스트용 기본 데이터 설정
-        const defaultUserData: UserData = {
-          user: {
-            id: "1",
-            user_id: "user_001",
-            email: "brewery@company.com",
-            name: "홍길동",
-            phone: "02-1234-5678",
-            isBreweryRegistered: false,
-            createdAt: new Date().toISOString()
-          },
-          brewery: null
-        };
-        
-        localStorage.setItem('userData', JSON.stringify(defaultUserData));
-        setUserName(defaultUserData.user.name);
-
-      } catch (error) {
-        console.error('사용자 데이터 로드 실패:', error);
-        setUserName('관리자');
-      }
-    };
-
-    loadUserData();
-  }, []);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const menuItems: MenuItem[] = [
-    {
-      id: 'dashboard',
-      label: '대시보드'
-    },
-    {
-      id: 'brewery',
-      label: '양조장 관리'
-    },
+    { id: 'dashboard', label: '대시보드' },
+    { id: 'brewery', label: '양조장 관리' },
     {
       id: 'experience',
       label: '체험 프로그램',
@@ -106,14 +51,8 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
         { id: 'product-list', label: '제품 관리'},
       ]
     },
-    {
-      id: 'statistics',
-      label: '통계'
-    },
-    {
-      id: 'settings',
-      label: '설정'
-    }
+    { id: 'statistics', label: '통계' },
+    { id: 'settings', label: '설정' }
   ];
 
   const toggleMenu = (menuId: string) => {
@@ -129,6 +68,13 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       toggleMenu(menuId);
     } else {
       onNavigate(menuId);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (confirm('로그아웃 하시겠습니까?')) {
+      await logoutApi();
+      logout();
     }
   };
 
@@ -169,7 +115,8 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logo}>
-        <span className={styles.logoText}>양조장 관리 시스템</span>
+        <span className={styles.logoText}>몽향의숲</span>
+        <span className={styles.logoSubtext}>관리 시스템</span>
       </div>
 
       <nav className={styles.nav}>
@@ -177,13 +124,41 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       </nav>
 
       <div className={styles.footer}>
-        <div className={styles.userInfo}>
-          <div className={styles.userAvatar}>👤</div>
-          <div className={styles.userDetails}>
-            <div className={styles.userName}>{userName}</div>
-            <div className={styles.userRole}>관리자</div>
+        <div 
+          className={styles.userInfo}
+          onClick={() => setShowUserMenu(!showUserMenu)}
+        >
+          <div className={styles.userAvatar}>
+            {user?.nickname?.charAt(0) || '사'}
           </div>
+          <div className={styles.userDetails}>
+            <div className={styles.userName}>{user?.nickname || '사용자'}</div>
+            <div className={styles.userEmail}>{user?.email || ''}</div>
+          </div>
+          <span className={styles.userMenuIcon}>⋮</span>
         </div>
+
+        {showUserMenu && (
+          <div className={styles.userMenu}>
+            <button 
+              className={styles.userMenuItem}
+              onClick={() => {
+                setShowUserMenu(false);
+                onNavigate('settings');
+              }}
+            >
+              <span>⚙️</span>
+              <span>설정</span>
+            </button>
+            <button 
+              className={styles.userMenuItem}
+              onClick={handleLogout}
+            >
+              <span>🚪</span>
+              <span>로그아웃</span>
+            </button>
+          </div>
+        )}
       </div>
     </aside>
   );

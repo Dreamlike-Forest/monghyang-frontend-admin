@@ -1,0 +1,700 @@
+.container {
+  padding: 24px;
+  background-color: #f5f5f5;
+  min-height: 100vh;
+}
+
+.header {
+  margin-bottom: 24px;
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.pageTitle {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+}
+
+.summary {
+  display: flex;
+  gap: 24px;
+  font-size: 14px;
+  color: #666;
+}
+
+.summary span {
+  padding: 4px 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+
+/* 필터 섹션 */
+.filterSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.filterGroup {
+  display: flex;
+  gap: 12px;
+  flex: 1;
+}
+
+.filterSelect {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  outline: none;
+}
+
+.filterSelect:focus {
+  border-color: #4a90e2;
+}
+
+.searchInput {
+  flex: 1;
+  max-width: 400px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: #4a90e2;
+}
+
+.exportBtn {
+  padding: 8px 16px;
+  background: #52c41a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.exportBtn:hover {
+  background: #45a614;
+}
+
+/* 일괄 처리 버튼 섹션 */
+.bulkActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background: #e6f7ff;
+  border: 1px solid #91d5ff;
+  border-radius: 6px;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selectedCount {
+  font-weight: 600;
+  color: #1890ff;
+  margin-right: 8px;
+}
+
+.bulkStatusBtn,
+.bulkTrackingBtn {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #1890ff;
+  color: #1890ff;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.bulkStatusBtn:hover,
+.bulkTrackingBtn:hover {
+  background: #1890ff;
+  color: white;
+}
+
+/* 테이블 */
+.tableWrapper {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.deliveryTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.deliveryTable thead {
+  background: #f8f9fa;
+}
+
+.deliveryTable th {
+  padding: 12px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 14px;
+  color: #333;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.deliveryTable th:first-child {
+  width: 40px;
+  text-align: center;
+}
+
+.deliveryTable tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: background 0.2s;
+}
+
+.deliveryTable tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.deliveryTable tbody tr.selectedRow {
+  background: #e6f7ff;
+}
+
+.deliveryTable tbody tr.selectedRow:hover {
+  background: #d0ebff;
+}
+
+.deliveryTable td {
+  padding: 12px;
+  font-size: 14px;
+  color: #666;
+}
+
+.deliveryTable td:first-child {
+  text-align: center;
+}
+
+.deliveryTable input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
+.orderNumber {
+  font-weight: 600;
+  color: #4a90e2;
+}
+
+.customerInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.customerPhone {
+  font-size: 12px;
+  color: #999;
+}
+
+.address {
+  max-width: 300px;
+  line-height: 1.4;
+}
+
+.statusBadge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.statusPending {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.statusPreparing {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.statusShipping {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.statusDelivered {
+  background: #e8f5e9;
+  color: #4caf50;
+}
+
+.statusCancelled {
+  background: #fff1f0;
+  color: #f5222d;
+}
+
+.trackingInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.trackingNumber {
+  font-size: 12px;
+  color: #999;
+}
+
+.noTracking {
+  color: #ccc;
+}
+
+.price {
+  font-weight: 600;
+  color: #333;
+}
+
+.detailBtn {
+  padding: 6px 12px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.detailBtn:hover {
+  background: #357abd;
+}
+
+/* 모달 */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modalContent {
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modalHeader h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.closeBtn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.closeBtn:hover {
+  background: #f0f0f0;
+}
+
+.modalBody {
+  padding: 20px;
+}
+
+/* 배송 상태 일괄 변경 모달 스타일 */
+.modalDescription {
+  margin-bottom: 20px;
+  color: #666;
+  font-size: 14px;
+}
+
+.statusOptions {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.statusOption {
+  padding: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  background: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.statusOption:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.optionPending {
+  color: #fa8c16;
+}
+.optionPending:hover {
+  border-color: #fa8c16;
+  background: #fff7e6;
+}
+
+.optionPreparing {
+  color: #1890ff;
+}
+.optionPreparing:hover {
+  border-color: #1890ff;
+  background: #e6f7ff;
+}
+
+.optionShipping {
+  color: #52c41a;
+}
+.optionShipping:hover {
+  border-color: #52c41a;
+  background: #f6ffed;
+}
+
+.optionDelivered {
+  color: #4caf50;
+}
+.optionDelivered:hover {
+  border-color: #4caf50;
+  background: #e8f5e9;
+}
+
+.optionCancelled {
+  color: #f5222d;
+}
+.optionCancelled:hover {
+  border-color: #f5222d;
+  background: #fff1f0;
+}
+
+/* 송장번호 일괄 입력 모달 스타일 */
+.companySection {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.companySection label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+}
+
+.companySelect {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  outline: none;
+}
+
+.companySelect:focus {
+  border-color: #4a90e2;
+}
+
+.trackingInputSection {
+  margin-bottom: 16px;
+}
+
+.inputDescription {
+  margin-bottom: 12px;
+  color: #666;
+  font-size: 14px;
+}
+
+.trackingInputList {
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+}
+
+.trackingInputRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 4px;
+}
+
+.trackingInputRow:last-child {
+  margin-bottom: 0;
+}
+
+.orderInfo {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.orderNum {
+  font-weight: 600;
+  color: #4a90e2;
+  font-size: 13px;
+}
+
+.customerName {
+  font-size: 12px;
+  color: #666;
+}
+
+.trackingInput {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.trackingInput:focus {
+  border-color: #4a90e2;
+  background: white;
+}
+
+/* 상세 정보 모달 스타일 (기존) */
+.detailSection {
+  margin-bottom: 24px;
+}
+
+.detailSection h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.detailRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.label {
+  min-width: 100px;
+  font-size: 14px;
+  color: #666;
+}
+
+.input {
+  flex: 1;
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #4a90e2;
+}
+
+.statusSelect {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  background: white;
+  cursor: pointer;
+  outline: none;
+}
+
+.statusSelect:focus {
+  border-color: #4a90e2;
+}
+
+.memoTextarea {
+  width: 100%;
+  min-height: 80px;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  resize: vertical;
+  outline: none;
+}
+
+.memoTextarea:focus {
+  border-color: #4a90e2;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 16px 20px;
+  border-top: 1px solid #e9ecef;
+}
+
+.saveBtn {
+  padding: 8px 20px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.saveBtn:hover {
+  background: #357abd;
+}
+
+.cancelBtn {
+  padding: 8px 20px;
+  background: white;
+  color: #666;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.cancelBtn:hover {
+  background: #f0f0f0;
+}
+
+/* 반응형 */
+@media (max-width: 768px) {
+  .filterSection {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .filterGroup {
+    width: 100%;
+  }
+
+  .searchInput {
+    max-width: none;
+  }
+
+  .exportBtn {
+    width: 100%;
+  }
+
+  .bulkActions {
+    flex-wrap: wrap;
+  }
+
+  .statusOptions {
+    grid-template-columns: 1fr;
+  }
+
+  .tableWrapper {
+    overflow-x: auto;
+  }
+
+  .deliveryTable {
+    min-width: 800px;
+  }
+
+  .modalContent {
+    width: 95%;
+    margin: 20px;
+  }
+
+  .trackingInputRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .trackingInput {
+    width: 100%;
+  }
+}

@@ -1,165 +1,43 @@
 .sidebar {
   width: 280px;
   height: 100vh;
-  background-color: #7a3118;
+  background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
+  color: white;
   display: flex;
   flex-direction: column;
   position: fixed;
   left: 0;
   top: 0;
-  overflow-y: auto;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.1);
 }
 
 .logo {
   padding: 24px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: #5a2412;
-}
-
-.logoIcon {
-  font-size: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .logoText {
-  font-size: 20px;
+  font-size: 24px;
   font-weight: 700;
-  color: white;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.logoSubtext {
+  font-size: 12px;
+  color: #a0aec0;
+  font-weight: 500;
 }
 
 .nav {
   flex: 1;
-  padding: 20px 0;
   overflow-y: auto;
-}
-
-.menuItemContainer {
-  margin-bottom: 4px;
-}
-
-.menuItem {
-  display: flex;
-  align-items: center;
-  padding: 14px 20px;
-  color: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  gap: 12px;
-}
-
-.menuItem:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: white;
-}
-
-.menuItem.active {
-  background-color: #c55820;
-  color: white;
-  font-weight: 600;
-  border-left: 4px solid #e28d4a;
-}
-
-.subMenuItem {
-  padding-left: 40px;
-  font-size: 14px;
-}
-
-.menuIcon {
-  font-size: 20px;
-  width: 24px;
-  text-align: center;
-  flex-shrink: 0;
-}
-
-.menuLabel {
-  flex: 1;
-  font-size: 15px;
-}
-
-.badge {
-  padding: 2px 8px;
-  background-color: rgba(255, 255, 255, 0.2);
-  color: white;
-  font-size: 11px;
-  font-weight: 600;
-  border-radius: 10px;
-  margin-left: auto;
-}
-
-.expandIcon {
-  font-size: 10px;
-  transition: transform 0.2s;
-  margin-left: auto;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-.expandIcon.expanded {
-  transform: rotate(180deg);
-}
-
-.subMenu {
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-.footer {
-  padding: 20px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  background-color: rgba(0, 0, 0, 0.1);
-}
-
-.userInfo {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.userAvatar {
-  width: 40px;
-  height: 40px;
-  background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-}
-
-.userDetails {
-  flex: 1;
-}
-
-.userName {
-  font-size: 14px;
-  font-weight: 600;
-  color: white;
-  margin-bottom: 2px;
-}
-
-.userRole {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.6);
-}
-
-/* 스크롤바 스타일 */
-.sidebar::-webkit-scrollbar {
-  width: 6px;
-}
-
-.sidebar::-webkit-scrollbar-track {
-  background: rgba(0, 0, 0, 0.1);
-}
-
-.sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
-}
-
-.sidebar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.5);
+  padding: 16px 0;
 }
 
 .nav::-webkit-scrollbar {
@@ -167,7 +45,7 @@
 }
 
 .nav::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .nav::-webkit-scrollbar-thumb {
@@ -175,20 +53,165 @@
   border-radius: 3px;
 }
 
-@media (max-width: 1024px) {
-  .sidebar {
-    width: 240px;
-  }
-
-  .menuLabel {
-    font-size: 14px;
-  }
+.menuItemContainer {
+  margin-bottom: 4px;
 }
 
-@media (max-width: 768px) {
-  .sidebar {
-    width: 100%;
-    height: auto;
-    position: relative;
-  }
+.menuItem {
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #e2e8f0;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.menuItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.menuItem.active {
+  background: linear-gradient(90deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+  border-left: 4px solid #667eea;
+  padding-left: 16px;
+}
+
+.subMenuItem {
+  padding-left: 40px !important;
+  font-size: 13px;
+  color: #cbd5e0;
+}
+
+.subMenuItem.active {
+  padding-left: 36px !important;
+}
+
+.menuLabel {
+  flex: 1;
+}
+
+.badge {
+  padding: 2px 8px;
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  font-size: 10px;
+  border-radius: 12px;
+  font-weight: 600;
+  margin-right: 8px;
+}
+
+.expandIcon {
+  font-size: 10px;
+  transition: transform 0.2s;
+  color: #a0aec0;
+}
+
+.expandIcon.expanded {
+  transform: rotate(180deg);
+}
+
+.subMenu {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 16px;
+  position: relative;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.userInfo:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.userAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.userDetails {
+  flex: 1;
+  min-width: 0;
+}
+
+.userName {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userEmail {
+  font-size: 12px;
+  color: #a0aec0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userMenuIcon {
+  color: #a0aec0;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.userMenu {
+  position: absolute;
+  bottom: 100%;
+  left: 16px;
+  right: 16px;
+  background: #2d3748;
+  border-radius: 8px;
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.2);
+  padding: 8px;
+  margin-bottom: 8px;
+  z-index: 10;
+}
+
+.userMenuItem {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: left;
+}
+
+.userMenuItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.userMenuItem span:first-child {
+  font-size: 16px;
 }

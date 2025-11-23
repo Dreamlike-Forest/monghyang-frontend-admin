@@ -2,43 +2,38 @@
 
 import React, { useState } from 'react';
 import styles from './ProductRegisterPage.module.css';
-
-interface ProductFormData {
-  name: string;
-  type: string;
-  alcohol: string;
-  volume: string;
-  price: string;
-  stock: string;
-  description: string;
-  ingredients: string;
-  origin: string;
-  manufacturer: string;
-}
+import { registerProduct, ProductFormData } from '../../../utils/productApi';
 
 export default function ProductRegisterPage() {
   const [formData, setFormData] = useState<ProductFormData>({
     name: '',
-    type: '',
     alcohol: '',
     volume: '',
-    price: '',
-    stock: '',
-    description: '',
-    ingredients: '',
-    origin: '',
-    manufacturer: ''
+    origin_price: '',
+    inventory: '',
+    is_online_sell: true,
+    description: ''
   });
 
   const [images, setImages] = useState<File[]>([]);
   const [previewUrls, setPreviewUrls] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    const { name, value, type } = e.target;
+    
+    if (type === 'checkbox') {
+      const checked = (e.target as HTMLInputElement).checked;
+      setFormData(prev => ({
+        ...prev,
+        [name]: checked
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -68,35 +63,39 @@ export default function ProductRegisterPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // 유효성 검사
-    if (!formData.name || !formData.type || !formData.price) {
+    if (!formData.name || !formData.alcohol || !formData.volume || !formData.origin_price || !formData.inventory) {
       alert('필수 항목을 모두 입력해주세요.');
       return;
     }
 
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+
     try {
-      // API 호출 로직
-      console.log('제품 등록:', formData, images);
-      alert('제품이 등록되었습니다.');
-      
-      // 폼 초기화
-      setFormData({
-        name: '',
-        type: '',
-        alcohol: '',
-        volume: '',
-        price: '',
-        stock: '',
-        description: '',
-        ingredients: '',
-        origin: '',
-        manufacturer: ''
-      });
-      setImages([]);
-      setPreviewUrls([]);
+      const result = await registerProduct(formData, images);
+
+      if (result.success) {
+        alert(result.message || '상품이 등록되었습니다.');
+        
+        setFormData({
+          name: '',
+          alcohol: '',
+          volume: '',
+          origin_price: '',
+          inventory: '',
+          is_online_sell: true,
+          description: ''
+        });
+        setImages([]);
+        setPreviewUrls([]);
+      } else {
+        alert(result.error || '상품 등록에 실패했습니다.');
+      }
     } catch (error) {
-      alert('제품 등록에 실패했습니다.');
-      console.error(error);
+      console.error('예상치 못한 오류:', error);
+      alert('상품 등록 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -108,7 +107,6 @@ export default function ProductRegisterPage() {
       </div>
 
       <form className={styles.form} onSubmit={handleSubmit}>
-        {/* 기본 정보 */}
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>기본 정보</h2>
           
@@ -130,27 +128,8 @@ export default function ProductRegisterPage() {
 
             <div className={styles.formGroup}>
               <label className={styles.label}>
-                주종 <span className={styles.required}>*</span>
+                알코올 도수 <span className={styles.required}>*</span>
               </label>
-              <select
-                name="type"
-                value={formData.type}
-                onChange={handleInputChange}
-                className={styles.select}
-                required
-              >
-                <option value="">선택하세요</option>
-                <option value="막걸리">막걸리</option>
-                <option value="청주">청주</option>
-                <option value="약주">약주</option>
-                <option value="증류주">증류주</option>
-                <option value="과실주">과실주</option>
-                <option value="리큐르">리큐르</option>
-              </select>
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.label}>알코올 도수</label>
               <input
                 type="number"
                 name="alcohol"
@@ -161,12 +140,15 @@ export default function ProductRegisterPage() {
                 step="0.1"
                 min="0"
                 max="100"
+                required
               />
               <span className={styles.unit}>%</span>
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>용량</label>
+              <label className={styles.label}>
+                용량 <span className={styles.required}>*</span>
+              </label>
               <input
                 type="number"
                 name="volume"
@@ -174,6 +156,8 @@ export default function ProductRegisterPage() {
                 onChange={handleInputChange}
                 className={styles.input}
                 placeholder="예: 750"
+                min="1"
+                required
               />
               <span className={styles.unit}>ml</span>
             </div>
@@ -184,33 +168,49 @@ export default function ProductRegisterPage() {
               </label>
               <input
                 type="number"
-                name="price"
-                value={formData.price}
+                name="origin_price"
+                value={formData.origin_price}
                 onChange={handleInputChange}
                 className={styles.input}
                 placeholder="예: 15000"
+                min="0"
                 required
               />
               <span className={styles.unit}>원</span>
             </div>
 
             <div className={styles.formGroup}>
-              <label className={styles.label}>재고 수량</label>
+              <label className={styles.label}>
+                초기 재고 수량 <span className={styles.required}>*</span>
+              </label>
               <input
                 type="number"
-                name="stock"
-                value={formData.stock}
+                name="inventory"
+                value={formData.inventory}
                 onChange={handleInputChange}
                 className={styles.input}
                 placeholder="예: 100"
                 min="0"
+                required
               />
               <span className={styles.unit}>개</span>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.checkboxLabel}>
+                <input
+                  type="checkbox"
+                  name="is_online_sell"
+                  checked={formData.is_online_sell}
+                  onChange={handleInputChange}
+                  className={styles.checkbox}
+                />
+                <span>온라인 판매 허용</span>
+              </label>
             </div>
           </div>
         </div>
 
-        {/* 상세 정보 */}
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>상세 정보</h2>
           
@@ -225,50 +225,11 @@ export default function ProductRegisterPage() {
               rows={5}
             />
           </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label}>원재료</label>
-            <input
-              type="text"
-              name="ingredients"
-              value={formData.ingredients}
-              onChange={handleInputChange}
-              className={styles.input}
-              placeholder="예: 쌀, 누룩, 정제수"
-            />
-          </div>
-
-          <div className={styles.formGrid}>
-            <div className={styles.formGroup}>
-              <label className={styles.label}>원산지</label>
-              <input
-                type="text"
-                name="origin"
-                value={formData.origin}
-                onChange={handleInputChange}
-                className={styles.input}
-                placeholder="예: 경기도 포천시"
-              />
-            </div>
-
-            <div className={styles.formGroup}>
-              <label className={styles.label}>제조사</label>
-              <input
-                type="text"
-                name="manufacturer"
-                value={formData.manufacturer}
-                onChange={handleInputChange}
-                className={styles.input}
-                placeholder="예: 산사원 양조장"
-              />
-            </div>
-          </div>
         </div>
 
-        {/* 제품 이미지 */}
         <div className={styles.section}>
           <h2 className={styles.sectionTitle}>제품 이미지</h2>
-          <p className={styles.imageNote}>최대 5개까지 등록 가능합니다</p>
+          <p className={styles.imageNote}>최대 5개까지 등록 가능합니다 (첫 번째 이미지가 대표 이미지입니다)</p>
           
           <div className={styles.imageUploadArea}>
             {previewUrls.map((url, index) => (
@@ -301,13 +262,20 @@ export default function ProductRegisterPage() {
           </div>
         </div>
 
-        {/* 버튼 */}
         <div className={styles.buttonGroup}>
-          <button type="button" className={styles.cancelBtn}>
+          <button 
+            type="button" 
+            className={styles.cancelBtn}
+            onClick={() => window.history.back()}
+          >
             취소
           </button>
-          <button type="submit" className={styles.submitBtn}>
-            등록하기
+          <button 
+            type="submit" 
+            className={styles.submitBtn}
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? '등록 중...' : '등록하기'}
           </button>
         </div>
       </form>
