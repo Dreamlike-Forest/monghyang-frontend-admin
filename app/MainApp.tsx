@@ -1,13 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../utils/authUtils';
 import Sidebar from '../components/sidebar/Sidebar';
 import DashboardPage from '../components/dashboard/DashboardPage';
 import BreweryPage from '../components/brewery/BreweryPage';
 import ExperienceRegisterPage from '../components/experience/register/ExperienceRegisterPage';
 import ExperienceListPage from '../components/experience/list/ExperienceListPage';
-import SchedulePage from '../components/experience/schedule/SchedulePage';
 import ReservationStatusPage from '../components/reservations/status/ReservationStatusPage';
 import PhoneReservationPage from '../components/reservations/phone/PhoneReservationPage';
 import ProductRegisterPage from '../components/products/register/ProductRegisterPage';
@@ -18,73 +17,69 @@ import StatisticsPage from '../components/statistics/StatisticsPage';
 import Login from '../components/Login/Login';
 import styles from './MainApp.module.css';
 
+type PageKey = 
+  | 'dashboard' 
+  | 'brewery' 
+  | 'experience-register' 
+  | 'experience-list'
+  | 'reservation-status' 
+  | 'reservation-phone' 
+  | 'reservation-block'
+  | 'product-register' 
+  | 'product-list' 
+  | 'product-delivery'
+  | 'statistics' 
+  | 'settings';
+
+const PAGES: Record<PageKey, React.ComponentType> = {
+  'dashboard': DashboardPage,
+  'brewery': BreweryPage,
+  'experience-register': ExperienceRegisterPage,
+  'experience-list': ExperienceListPage,
+  'reservation-status': ReservationStatusPage,
+  'reservation-phone': PhoneReservationPage,
+  'reservation-block': () => <Placeholder text="예약 차단 설정" />,
+  'product-register': ProductRegisterPage,
+  'product-list': ProductListPage,
+  'product-delivery': DeliveryManagePage,
+  'statistics': StatisticsPage,
+  'settings': () => <Placeholder text="설정" />,
+};
+
+function LoadingScreen() {
+  return (
+    <div className={styles.loadingContainer}>
+      <div className={styles.loadingContent}>
+        <div className={styles.loadingTitle}>몽향의숲</div>
+        <div className={styles.loadingText}>로딩중...</div>
+      </div>
+    </div>
+  );
+}
+
+function Placeholder({ text }: { text: string }) {
+  return <div className={styles.placeholder}>{text} 페이지 (준비중)</div>;
+}
+
 export default function MainApp() {
-  const [currentPage, setCurrentPage] = useState('dashboard');
+  const [currentPage, setCurrentPage] = useState<PageKey>('dashboard');
   const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
-    return (
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center', 
-        height: '100vh',
-        background: '#f8f9fa'
-      }}>
-        <div style={{ textAlign: 'center' }}>
-          <div style={{ 
-            fontSize: '24px', 
-            marginBottom: '16px',
-            color: '#8b5a3c'
-          }}>몽향의숲</div>
-          <div style={{ color: '#6b7280' }}>로딩중...</div>
-        </div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!isAuthenticated) {
     return <Login />;
   }
 
-  const renderPage = () => {
-    switch (currentPage) {
-      case 'dashboard':
-        return <DashboardPage />;
-      case 'brewery':
-        return <BreweryPage />;
-      case 'experience-register':
-        return <ExperienceRegisterPage />;
-      case 'experience-list':
-        return <ExperienceListPage />;
-      case 'experience-schedule':
-        return <SchedulePage />;
-      case 'reservation-status':
-        return <ReservationStatusPage />;
-      case 'reservation-phone':
-        return <PhoneReservationPage />;
-      case 'reservation-block':
-        return <div style={{ padding: '30px' }}>예약 차단 설정 페이지 (준비중)</div>;
-      case 'product-register':
-        return <ProductRegisterPage />;
-      case 'product-list':
-        return <ProductListPage />;
-      case 'product-delivery':
-        return <DeliveryManagePage />;
-      case 'statistics':
-        return <StatisticsPage/>;
-      case 'settings':
-        return <div style={{ padding: '30px' }}>설정 페이지 (준비중)</div>;
-      default:
-        return <DashboardPage />;
-    }
-  };
+  const PageComponent = PAGES[currentPage] || PAGES.dashboard;
 
   return (
     <div className={styles.appContainer}>
-      <Sidebar currentPage={currentPage} onNavigate={setCurrentPage} />
+      <Sidebar currentPage={currentPage} onNavigate={(page) => setCurrentPage(page as PageKey)} />
       <main className={styles.mainContent}>
-        {renderPage()}
+        <PageComponent />
       </main>
     </div>
   );

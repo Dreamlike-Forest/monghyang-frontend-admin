@@ -1,20 +1,25 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './ReservationStatusPage.module.css';
+import {
+  fetchReservationHistory,
+  fetchReservationHistoryByDate,
+  deleteReservation,
+  ReservationOrder
+} from '../../../utils/experienceApi';
 
 interface Reservation {
-  id: string;
+  id: number;
   customerName: string;
   phone: string;
   programName: string;
   date: string;
   time: string;
   participants: number;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled';
+  status: string;
   totalAmount: number;
-  paymentStatus: 'unpaid' | 'partial' | 'paid';
-  memo?: string;
+  paymentStatus: string;
   createdAt: string;
 }
 
@@ -23,95 +28,174 @@ export default function ReservationStatusPage() {
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterDate, setFilterDate] = useState<string>('');
   const [selectedReservation, setSelectedReservation] = useState<Reservation | null>(null);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
 
-  // 예약 데이터 (실제로는 API에서 가져옴)
-  const [reservations] = useState<Reservation[]>([
-    {
-      id: 'RSV-2024-001',
-      customerName: '김철수',
-      phone: '010-1234-5678',
-      programName: '전통주 빚기 체험',
-      date: '2025-10-20',
-      time: '14:00',
-      participants: 4,
-      status: 'confirmed',
-      totalAmount: 120000,
-      paymentStatus: 'paid',
-      memo: '주차 필요',
-      createdAt: '2025-10-10 09:30'
-    },
-    {
-      id: 'RSV-2024-002',
-      customerName: '이영희',
-      phone: '010-9876-5432',
-      programName: '막걸리 테이스팅',
-      date: '2025-10-18',
-      time: '11:00',
-      participants: 2,
-      status: 'pending',
-      totalAmount: 60000,
-      paymentStatus: 'unpaid',
-      createdAt: '2025-10-14 14:20'
-    },
-    {
-      id: 'RSV-2024-003',
-      customerName: '박민수',
-      phone: '010-5555-7777',
-      programName: '양조장 투어',
-      date: '2025-10-15',
-      time: '10:00',
-      participants: 6,
-      status: 'completed',
-      totalAmount: 90000,
-      paymentStatus: 'paid',
-      createdAt: '2025-10-05 16:45'
+  useEffect(() => {
+    loadReservations();
+  }, [currentPage, filterDate]);
+
+  const loadReservations = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      let data;
+      if (filterDate) {
+        data = await fetchReservationHistoryByDate(currentPage, filterDate);
+      } else {
+        data = await fetchReservationHistory(currentPage);
+      }
+
+      const mappedReservations: Reservation[] = data.content.map((order: ReservationOrder) => ({
+        id: order.joy_order_id,
+        customerName: order.joy_order_payer_name,
+        phone: order.joy_order_payer_phone,
+        programName: order.joy_name,
+        date: order.joy_order_reservation.split('T')[0],
+        time: order.joy_order_reservation.split('T')[1]?.substring(0, 5) || '',
+        participants: order.joy_order_count,
+        status: mapPaymentStatusToReservationStatus(order.joy_payment_status),
+        totalAmount: order.joy_total_price,
+        paymentStatus: mapPaymentStatus(order.joy_payment_status),
+        createdAt: new Date(order.joy_order_created_at).toLocaleString('ko-KR')
+      }));
+
+      if (currentPage === 0) {
+        setReservations(mappedReservations);
+      } else {
+        setReservations(prev => [...prev, ...mappedReservations]);
+      }
+
+      setTotalPages(data.totalPages);
+      setHasMore(!data.last);
+    } catch (err) {
+      setError('예약 내역을 불러오는데 실패했습니다.');
+      console.error('예약 내역 조회 오류:', err);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
 
-  const statusLabels = {
+  const mapPaymentStatusToReservationStatus = (status: string): string => {
+    switch (status) {
+      case 'PAID':
+        return 'confirmed';
+      case 'PENDING':
+        return 'pending';
+      case 'UNPAID':
+        return 'pending';
+      case 'CANCELLED':
+        return 'cancelled';
+      case 'REFUND':
+        return 'cancelled';
+      default:
+        return 'pending';
+    }
+  };
+
+  const mapPaymentStatus = (status: string): string => {
+    switch (status) {
+      case 'PAID':
+        return 'paid';
+      case 'PENDING':
+        return 'partial';
+      case 'UNPAID':
+        return 'unpaid';
+      case 'CANCELLED':
+        return 'unpaid';
+      case 'REFUND':
+        return 'unpaid';
+      default:
+        return 'unpaid';
+    }
+  };
+
+  const statusLabels: Record<string, string> = {
     pending: '예약 대기',
     confirmed: '예약 확정',
     completed: '체험 완료',
     cancelled: '예약 취소'
   };
 
-  const statusColors = {
+  const statusColors: Record<string, string> = {
     pending: '#fbbf24',
     confirmed: '#10b981',
     completed: '#6b7280',
     cancelled: '#ef4444'
   };
 
-  const paymentLabels = {
+  const paymentLabels: Record<string, string> = {
     unpaid: '미결제',
     partial: '부분결제',
     paid: '결제완료'
   };
 
-  // 필터링된 예약 목록
   const filteredReservations = reservations.filter(reservation => {
     const matchesSearch = 
       reservation.customerName.includes(searchTerm) ||
       reservation.phone.includes(searchTerm) ||
-      reservation.id.includes(searchTerm);
+      String(reservation.id).includes(searchTerm);
     
     const matchesStatus = filterStatus === 'all' || reservation.status === filterStatus;
-    const matchesDate = !filterDate || reservation.date === filterDate;
 
-    return matchesSearch && matchesStatus && matchesDate;
+    return matchesSearch && matchesStatus;
   });
 
-  const handleStatusChange = (reservationId: string, newStatus: string) => {
-    console.log(`예약 ${reservationId}의 상태를 ${newStatus}로 변경`);
-    // 실제로는 API 호출
-  };
+  const handleDeleteReservation = async (reservationId: number) => {
+    if (!window.confirm('정말 이 예약을 삭제하시겠습니까?')) return;
 
-  const handleDeleteReservation = (reservationId: string) => {
-    if (window.confirm('정말 이 예약을 삭제하시겠습니까?')) {
-      console.log(`예약 ${reservationId} 삭제`);
-      // 실제로는 API 호출
+    try {
+      const result = await deleteReservation(reservationId);
+      if (result.success) {
+        alert(result.message);
+        setCurrentPage(0);
+        await loadReservations();
+      } else {
+        alert(result.error || '예약 삭제 중 오류가 발생했습니다.');
+      }
+    } catch (err) {
+      alert('예약 삭제 중 오류가 발생했습니다.');
+      console.error('예약 삭제 오류:', err);
     }
   };
+
+  const handleLoadMore = () => {
+    if (hasMore && !loading) {
+      setCurrentPage(prev => prev + 1);
+    }
+  };
+
+  const handleDateFilterChange = (date: string) => {
+    setFilterDate(date);
+    setCurrentPage(0);
+    setReservations([]);
+  };
+
+  if (loading && currentPage === 0) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>예약 내역을 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  if (error && reservations.length === 0) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          {error}
+          <button onClick={loadReservations} className={styles.retryButton}>
+            다시 시도
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -164,7 +248,7 @@ export default function ReservationStatusPage() {
           <input
             type="date"
             value={filterDate}
-            onChange={(e) => setFilterDate(e.target.value)}
+            onChange={(e) => handleDateFilterChange(e.target.value)}
             className={styles.dateInput}
           />
 
@@ -173,6 +257,8 @@ export default function ReservationStatusPage() {
               setSearchTerm('');
               setFilterStatus('all');
               setFilterDate('');
+              setCurrentPage(0);
+              setReservations([]);
             }}
             className={styles.resetButton}
           >
@@ -252,7 +338,18 @@ export default function ReservationStatusPage() {
         </table>
       </div>
 
-      {/* 상세 정보 모달 */}
+      {hasMore && !loading && (
+        <div className={styles.loadMoreContainer}>
+          <button onClick={handleLoadMore} className={styles.loadMoreButton}>
+            더 보기
+          </button>
+        </div>
+      )}
+
+      {loading && currentPage > 0 && (
+        <div className={styles.loadingMore}>추가 데이터를 불러오는 중...</div>
+      )}
+
       {selectedReservation && (
         <div className={styles.modal} onClick={() => setSelectedReservation(null)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -306,23 +403,10 @@ export default function ReservationStatusPage() {
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>예약상태</span>
-                <select
-                  value={selectedReservation.status}
-                  onChange={(e) => handleStatusChange(selectedReservation.id, e.target.value)}
-                  className={styles.statusSelect}
-                >
-                  <option value="pending">예약 대기</option>
-                  <option value="confirmed">예약 확정</option>
-                  <option value="completed">체험 완료</option>
-                  <option value="cancelled">예약 취소</option>
-                </select>
+                <span className={styles.detailValue}>
+                  {statusLabels[selectedReservation.status]}
+                </span>
               </div>
-              {selectedReservation.memo && (
-                <div className={styles.detailRow}>
-                  <span className={styles.detailLabel}>메모</span>
-                  <span className={styles.detailValue}>{selectedReservation.memo}</span>
-                </div>
-              )}
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>예약일시</span>
                 <span className={styles.detailValue}>{selectedReservation.createdAt}</span>

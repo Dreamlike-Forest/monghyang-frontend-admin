@@ -1,6 +1,7 @@
 import apiClient from './api';
 import axios from 'axios';
 
+// 기존 제품 등록 인터페이스 (유지)
 export interface ProductFormData {
   name: string;
   alcohol: string;
@@ -26,6 +27,51 @@ export interface ApiResponse {
   message: string;
 }
 
+// 제품 목록 조회용 인터페이스 (백엔드 구조에 맞춤)
+export interface Product {
+  product_id: number;
+  users_nickname: string;
+  product_name: string;
+  product_review_star?: number;
+  product_review_count?: number;
+  product_alcohol: number;
+  product_volume: number;
+  product_sales_volume: number;
+  product_origin_price: string;
+  product_discount_rate: string;
+  product_final_price: string;
+  image_key?: string;
+  product_is_online_sell: boolean;
+  product_is_soldout: boolean;
+  tag_name?: string[];
+}
+
+export interface ProductDetail {
+  product_id: number;
+  product_name: string;
+  product_alcohol: number;
+  product_sales_volume: number;
+  product_volume: number;
+  product_description: string;
+  product_registered_at: string;
+  product_final_price: string;
+  product_discount_rate: string;
+  product_origin_price: string;
+  product_is_online_sell: boolean;
+  product_is_soldout: boolean;
+  user_nickname?: string;
+  product_image_image_key?: Array<{ image_key: string; seq: number }>;
+  tags_name?: string[];
+}
+
+export interface ProductListResponse {
+  content: Product[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
+}
+
 const createProductFormData = (formData: ProductFormData, images: File[]): FormData => {
   const formDataToSend = new FormData();
   
@@ -48,6 +94,7 @@ const createProductFormData = (formData: ProductFormData, images: File[]): FormD
   return formDataToSend;
 };
 
+// 기존 제품 등록 함수 (유지)
 export const registerProduct = async (
   formData: ProductFormData,
   images: File[]
@@ -107,6 +154,7 @@ export const registerProduct = async (
   }
 };
 
+// 기존 제품 수정 함수 (유지)
 export const updateProduct = async (
   productId: number,
   formData: ProductFormData,
@@ -187,6 +235,7 @@ export const updateProduct = async (
   }
 };
 
+// 기존 제품 삭제 함수 (유지)
 export const deleteProduct = async (
   productId: number
 ): Promise<{ success: boolean; message?: string; error?: string }> => {
@@ -232,6 +281,7 @@ export const deleteProduct = async (
   }
 };
 
+// 기존 제품 복구 함수 (유지)
 export const restoreProduct = async (
   productId: number
 ): Promise<{ success: boolean; message?: string; error?: string }> => {
@@ -258,5 +308,78 @@ export const restoreProduct = async (
       success: false,
       error: '상품 복구 중 오류가 발생했습니다.',
     };
+  }
+};
+
+// 제품 목록 조회 (백엔드 API에 맞춤)
+export const getProducts = async (params?: {
+  userId?: number;
+  startOffset?: number;
+  keyword?: string;
+  min_price?: number;
+  max_price?: number;
+  min_alcohol?: number;
+  max_alcohol?: number;
+  tag_id_list?: number[];
+}): Promise<ProductListResponse> => {
+  try {
+    let url = '/api/product/latest/0';
+    
+    // userId가 있으면 특정 판매자의 제품 조회
+    if (params?.userId) {
+      const offset = params.startOffset || 0;
+      url = `/api/product/by-user/${params.userId}/${offset}`;
+    } else if (params?.keyword || params?.min_price || params?.max_price || 
+               params?.min_alcohol || params?.max_alcohol || params?.tag_id_list) {
+      // 필터 검색
+      const offset = params.startOffset || 0;
+      url = `/api/product/search/${offset}`;
+      
+      const queryParams = new URLSearchParams();
+      if (params.keyword) queryParams.append('keyword', params.keyword);
+      if (params.min_price) queryParams.append('min_price', String(params.min_price));
+      if (params.max_price) queryParams.append('max_price', String(params.max_price));
+      if (params.min_alcohol) queryParams.append('min_alcohol', String(params.min_alcohol));
+      if (params.max_alcohol) queryParams.append('max_alcohol', String(params.max_alcohol));
+      if (params.tag_id_list) {
+        params.tag_id_list.forEach(id => queryParams.append('tag_id_list', String(id)));
+      }
+      
+      if (queryParams.toString()) {
+        url += `?${queryParams.toString()}`;
+      }
+    } else if (params?.startOffset) {
+      url = `/api/product/latest/${params.startOffset}`;
+    }
+
+    const response = await apiClient.get(url);
+    
+    return response.data.content;
+  } catch (error) {
+    console.error('제품 목록 조회 오류:', error);
+    throw error;
+  }
+};
+
+// 제품 상세 조회
+export const getProduct = async (id: number): Promise<ProductDetail> => {
+  try {
+    const response = await apiClient.get(`/api/product/${id}`);
+    return response.data.content;
+  } catch (error) {
+    console.error('제품 상세 조회 오류:', error);
+    throw error;
+  }
+};
+
+// 품절 상태 토글
+export const toggleProductSoldout = async (id: number): Promise<Product> => {
+  try {
+    // 백엔드에 품절 토글 API가 없으므로, product-update API를 사용해야 함
+    // 실제로는 백엔드에 토글 API를 추가하거나, 수정 API를 호출해야 함
+    throw new Error('품절 상태 변경은 제품 수정 API를 통해 수행해야 합니다.');
+  } catch (error) {
+    console.error('상태 토글 오류:', error);
+    throw error;
   }
 };

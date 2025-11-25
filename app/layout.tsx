@@ -1,4 +1,4 @@
-import { AuthProvider } from '../utils/authUtils';  // 경로 수정
+import { AuthProvider } from '../utils/authUtils';
 import './globals.css';
 
 export const metadata = {

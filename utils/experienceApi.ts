@@ -171,3 +171,145 @@ export const restoreExperience = async (
     return { success: false, error: '복구 중 오류가 발생했습니다.' };
   }
 };
+
+export interface Experience {
+  joy_id: number;
+  joy_name: string;
+  joy_place: string;
+  joy_detail: string;
+  joy_origin_price: number;
+  joy_discount_rate: number;
+  joy_final_price: number;
+  joy_sales_volume: number;
+  joy_image_key: string | null;
+  joy_is_soldout: boolean;
+  joy_time_unit: number;
+  joy_max_count: number;
+  joy_is_deleted: boolean;
+}
+
+export interface ExperienceListResponse {
+  status: number;
+  content: Experience[];
+}
+
+export const fetchExperienceList = async (): Promise<Experience[]> => {
+  try {
+    const response = await apiClient.get<ExperienceListResponse>('/api/brewery-priv/joy');
+    return response.data.content || [];
+  } catch (error) {
+    console.error('체험 목록 조회 실패:', error);
+    throw error;
+  }
+};
+
+export const setSoldout = async (joyId: number): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const response = await apiClient.post<ApiResponse>(
+      `/api/brewery-priv/joy-set-soldout/${joyId}`
+    );
+    return {
+      success: response.status === 200,
+      message: response.data.message || '체험이 품절 처리되었습니다.'
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message;
+      return { success: false, error: message || '품절 처리 중 오류가 발생했습니다.' };
+    }
+    return { success: false, error: '품절 처리 중 오류가 발생했습니다.' };
+  }
+};
+
+export const unsetSoldout = async (joyId: number): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const response = await apiClient.post<ApiResponse>(
+      `/api/brewery-priv/joy-unset-soldout/${joyId}`
+    );
+    return {
+      success: response.status === 200,
+      message: response.data.message || '체험이 품절 상태에서 복구되었습니다.'
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message;
+      return { success: false, error: message || '품절 해제 중 오류가 발생했습니다.' };
+    }
+    return { success: false, error: '품절 해제 중 오류가 발생했습니다.' };
+  }
+};
+
+export interface ReservationOrder {
+  joy_order_id: number;
+  user_id: number;
+  joy_id: number;
+  joy_name: string;
+  joy_order_count: number;
+  joy_total_price: number;
+  joy_order_payer_name: string;
+  joy_order_payer_phone: string;
+  joy_order_created_at: string;
+  joy_order_reservation: string;
+  joy_payment_status: 'UNPAID' | 'PENDING' | 'PAID' | 'REFUND' | 'CANCELLED';
+}
+
+export interface ReservationHistoryResponse {
+  status: number;
+  content: {
+    content: ReservationOrder[];
+    pageable: any;
+    totalPages: number;
+    totalElements: number;
+    last: boolean;
+    size: number;
+    number: number;
+    first: boolean;
+    numberOfElements: number;
+    empty: boolean;
+  };
+}
+
+export const fetchReservationHistory = async (startOffset: number = 0): Promise<ReservationHistoryResponse['content']> => {
+  try {
+    const response = await apiClient.get<ReservationHistoryResponse>(
+      `/api/brewery-priv/joy-order/history/${startOffset}`
+    );
+    return response.data.content;
+  } catch (error) {
+    console.error('예약 내역 조회 실패:', error);
+    throw error;
+  }
+};
+
+export const fetchReservationHistoryByDate = async (
+  startOffset: number = 0,
+  date: string
+): Promise<ReservationHistoryResponse['content']> => {
+  try {
+    const response = await apiClient.get<ReservationHistoryResponse>(
+      `/api/brewery-priv/joy-order/history-date/${startOffset}/${date}`
+    );
+    return response.data.content;
+  } catch (error) {
+    console.error('특정 날짜 예약 조회 실패:', error);
+    throw error;
+  }
+};
+
+export const deleteReservation = async (joyOrderId: number): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const response = await apiClient.delete<ApiResponse>(
+      `/api/brewery-priv/joy-order/${joyOrderId}`
+    );
+    return {
+      success: response.status === 200,
+      message: response.data.message || '예약이 삭제되었습니다.'
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message;
+      return { success: false, error: message || '예약 삭제 중 오류가 발생했습니다.' };
+    }
+    return { success: false, error: '예약 삭제 중 오류가 발생했습니다.' };
+  }
+};

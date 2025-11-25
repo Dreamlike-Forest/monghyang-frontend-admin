@@ -2,143 +2,133 @@
 
 import React, { useState, useEffect } from 'react';
 import styles from './ExperienceListPage.module.css';
+import {
+  fetchExperienceList,
+  setSoldout,
+  unsetSoldout,
+  deleteExperience,
+  Experience
+} from '../../../utils/experienceApi';
 
-interface Product {
-  id: string;
-  brewery_id: string;
-  name: string;
-  place: string;
-  detail: string;
-  origin_price: number;
-  discount_rate: number;
-  final_price: number;
-  sales_volume: number;
-  time_unit: number;
-  is_soldout: boolean;
-  is_deleted: boolean;
-  image_key: string;
-  volume: number;
-}
-
-export default function ProductListPage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+export default function ExperienceListPage() {
+  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [filteredExperiences, setFilteredExperiences] = useState<Experience[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'available' | 'soldout'>('all');
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'sales'>('name');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // 샘플 데이터 (실제로는 API에서 가져옴)
   useEffect(() => {
-    const sampleData: Product[] = [
-      {
-        id: '1',
-        brewery_id: '1',
-        name: '전통주 빚기 체험',
-        place: '양조장 1층 체험실',
-        detail: '직접 전통주를 빚어보는 체험 프로그램입니다.',
-        origin_price: 50000,
-        discount_rate: 10,
-        final_price: 45000,
-        sales_volume: 120,
-        time_unit: 2,
-        is_soldout: false,
-        is_deleted: false,
-        image_key: 'image1.jpg',
-        volume: 11
-      },
-      {
-        id: '2',
-        brewery_id: '1',
-        name: '막걸리 시음 체험',
-        place: '양조장 2층 시음실',
-        detail: '다양한 막걸리를 시음하며 맛의 차이를 체험합니다.',
-        origin_price: 30000,
-        discount_rate: 0,
-        final_price: 30000,
-        sales_volume: 85,
-        time_unit: 1,
-        is_soldout: true,
-        is_deleted: false,
-        image_key: 'image2.jpg',
-        volume: 8
-      },
-      {
-        id: '3',
-        brewery_id: '1',
-        name: '누룩 만들기 체험',
-        place: '양조장 야외 공간',
-        detail: '전통 누룩을 직접 만들어보는 프로그램입니다.',
-        origin_price: 40000,
-        discount_rate: 15,
-        final_price: 34000,
-        sales_volume: 65,
-        time_unit: 3,
-        is_soldout: false,
-        is_deleted: false,
-        image_key: 'image3.jpg',
-        volume: 10
-      }
-    ];
-    
-    setProducts(sampleData);
-    setFilteredProducts(sampleData);
+    loadExperiences();
   }, []);
 
-  // 검색 및 필터링
-  useEffect(() => {
-    let filtered = [...products];
+  const loadExperiences = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchExperienceList();
+      setExperiences(data);
+      setFilteredExperiences(data);
+    } catch (err) {
+      setError('체험 목록을 불러오는데 실패했습니다.');
+      console.error('체험 목록 조회 오류:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // 검색어 필터링
+  useEffect(() => {
+    let filtered = [...experiences];
+
     if (searchTerm) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.place.toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(exp =>
+        exp.joy_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        exp.joy_place.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // 상태 필터링
     if (filterStatus === 'available') {
-      filtered = filtered.filter(product => !product.is_soldout);
+      filtered = filtered.filter(exp => !exp.joy_is_soldout);
     } else if (filterStatus === 'soldout') {
-      filtered = filtered.filter(product => product.is_soldout);
+      filtered = filtered.filter(exp => exp.joy_is_soldout);
     }
 
-    // 정렬
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'price':
-          return a.final_price - b.final_price;
+          return a.joy_final_price - b.joy_final_price;
         case 'sales':
-          return b.sales_volume - a.sales_volume;
+          return b.joy_sales_volume - a.joy_sales_volume;
         default:
-          return a.name.localeCompare(b.name);
+          return a.joy_name.localeCompare(b.joy_name);
       }
     });
 
-    setFilteredProducts(filtered);
-  }, [products, searchTerm, filterStatus, sortBy]);
+    setFilteredExperiences(filtered);
+  }, [experiences, searchTerm, filterStatus, sortBy]);
 
-  const handleToggleSoldout = (id: string) => {
-    setProducts(prev =>
-      prev.map(product =>
-        product.id === id
-          ? { ...product, is_soldout: !product.is_soldout }
-          : product
-      )
-    );
-  };
+  const handleToggleSoldout = async (joyId: number, isSoldout: boolean) => {
+    try {
+      const result = isSoldout 
+        ? await unsetSoldout(joyId)
+        : await setSoldout(joyId);
 
-  const handleDelete = (id: string) => {
-    if (confirm('정말 삭제하시겠습니까?')) {
-      setProducts(prev =>
-        prev.map(product =>
-          product.id === id
-            ? { ...product, is_deleted: true }
-            : product
-        ).filter(product => !product.is_deleted)
-      );
+      if (result.success) {
+        await loadExperiences();
+        alert(result.message);
+      } else {
+        alert(result.error || '품절 처리 중 오류가 발생했습니다.');
+      }
+    } catch (err) {
+      alert('품절 처리 중 오류가 발생했습니다.');
+      console.error('품절 처리 오류:', err);
     }
   };
+
+  const handleDelete = async (joyId: number) => {
+    if (!confirm('정말 삭제하시겠습니까?')) return;
+
+    try {
+      const result = await deleteExperience(joyId);
+      if (result.success) {
+        await loadExperiences();
+        alert(result.message);
+      } else {
+        alert(result.error || '삭제 중 오류가 발생했습니다.');
+      }
+    } catch (err) {
+      alert('삭제 중 오류가 발생했습니다.');
+      console.error('삭제 오류:', err);
+    }
+  };
+
+  const getImageUrl = (imageKey: string | null) => {
+    if (!imageKey) return null;
+    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234';
+    return `${baseUrl}/api/image/${imageKey}`;
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>체험 목록을 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          {error}
+          <button onClick={loadExperiences} className={styles.retryButton}>
+            다시 시도
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -149,7 +139,6 @@ export default function ProductListPage() {
         </div>
       </div>
 
-      {/* 필터 및 검색 */}
       <div className={styles.controlBar}>
         <div className={styles.searchBox}>
           <input
@@ -184,88 +173,99 @@ export default function ProductListPage() {
         </div>
       </div>
 
-      {/* 통계 요약 */}
       <div className={styles.statsBar}>
         <div className={styles.statItem}>
           <span className={styles.statLabel}>전체</span>
-          <span className={styles.statValue}>{products.length}개</span>
+          <span className={styles.statValue}>{experiences.length}개</span>
         </div>
         <div className={styles.statItem}>
           <span className={styles.statLabel}>판매중</span>
           <span className={styles.statValue}>
-            {products.filter(p => !p.is_soldout).length}개
+            {experiences.filter(e => !e.joy_is_soldout).length}개
           </span>
         </div>
         <div className={styles.statItem}>
           <span className={styles.statLabel}>품절</span>
           <span className={styles.statValue}>
-            {products.filter(p => p.is_soldout).length}개
+            {experiences.filter(e => e.joy_is_soldout).length}개
           </span>
         </div>
         <div className={styles.statItem}>
           <span className={styles.statLabel}>총 판매량</span>
           <span className={styles.statValue}>
-            {products.reduce((sum, p) => sum + p.sales_volume, 0)}건
+            {experiences.reduce((sum, e) => sum + e.joy_sales_volume, 0)}건
           </span>
         </div>
       </div>
 
-      {/* 상품 목록 */}
       <div className={styles.productGrid}>
-        {filteredProducts.map(product => (
-          <div key={product.id} className={styles.productCard}>
-            {product.is_soldout && (
+        {filteredExperiences.map(exp => (
+          <div key={exp.joy_id} className={styles.productCard}>
+            {exp.joy_is_soldout && (
               <div className={styles.soldoutBadge}>품절</div>
             )}
             
             <div className={styles.productImage}>
-              <div className={styles.imagePlaceholder}>
-                📸
-              </div>
+              {exp.joy_image_key ? (
+                <img 
+                  src={getImageUrl(exp.joy_image_key) || ''} 
+                  alt={exp.joy_name}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                    e.currentTarget.parentElement!.innerHTML = '<div class="' + styles.imagePlaceholder + '">이미지 없음</div>';
+                  }}
+                />
+              ) : (
+                <div className={styles.imagePlaceholder}>이미지 없음</div>
+              )}
             </div>
 
             <div className={styles.productInfo}>
-              <h3 className={styles.productName}>{product.name}</h3>
-              <p className={styles.productPlace}>📍 {product.place}</p>
-              <p className={styles.productDetail}>{product.detail}</p>
+              <h3 className={styles.productName}>{exp.joy_name}</h3>
+              <p className={styles.productPlace}>{exp.joy_place}</p>
+              <p className={styles.productDetail}>{exp.joy_detail}</p>
 
               <div className={styles.productMeta}>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>소요시간</span>
-                  <span className={styles.metaValue}>{product.time_unit}시간</span>
+                  <span className={styles.metaValue}>{exp.joy_time_unit}시간</span>
+                </div>
+                <div className={styles.metaItem}>
+                  <span className={styles.metaLabel}>최대인원</span>
+                  <span className={styles.metaValue}>{exp.joy_max_count}명</span>
                 </div>
                 <div className={styles.metaItem}>
                   <span className={styles.metaLabel}>판매량</span>
-                  <span className={styles.metaValue}>{product.sales_volume}건</span>
+                  <span className={styles.metaValue}>{exp.joy_sales_volume}건</span>
                 </div>
               </div>
 
               <div className={styles.priceSection}>
-                {product.discount_rate > 0 && (
+                {exp.joy_discount_rate > 0 && (
                   <>
-                    <span className={styles.discountRate}>{product.discount_rate}%</span>
+                    <span className={styles.discountRate}>{exp.joy_discount_rate}%</span>
                     <span className={styles.originPrice}>
-                      {product.origin_price.toLocaleString()}원
+                      {exp.joy_origin_price.toLocaleString()}원
                     </span>
                   </>
                 )}
                 <span className={styles.finalPrice}>
-                  {product.final_price.toLocaleString()}원
+                  {exp.joy_final_price.toLocaleString()}원
                 </span>
               </div>
 
               <div className={styles.actions}>
                 <button
-                  onClick={() => handleToggleSoldout(product.id)}
-                  className={product.is_soldout ? styles.actionButtonPrimary : styles.actionButton}
+                  onClick={() => handleToggleSoldout(exp.joy_id, exp.joy_is_soldout)}
+                  className={exp.joy_is_soldout ? styles.actionButtonPrimary : styles.actionButton}
                 >
-                  {product.is_soldout ? '판매 재개' : '품절 처리'}
+                  {exp.joy_is_soldout ? '판매 재개' : '품절 처리'}
                 </button>
                 <button className={styles.actionButton}>
                   수정
                 </button>
                 <button
-                  onClick={() => handleDelete(product.id)}
+                  onClick={() => handleDelete(exp.joy_id)}
                   className={styles.actionButtonDanger}
                 >
                   삭제
@@ -276,7 +276,7 @@ export default function ProductListPage() {
         ))}
       </div>
 
-      {filteredProducts.length === 0 && (
+      {filteredExperiences.length === 0 && (
         <div className={styles.emptyState}>
           <p>검색 결과가 없습니다.</p>
         </div>

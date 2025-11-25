@@ -35,7 +35,7 @@ export default function Login() {
 
       if (result.success && result.data) {
         login(result.data);
-        router.push('/dashboard');
+        router.push('/');
       } else {
         setError(result.error || '로그인에 실패했습니다.');
       }

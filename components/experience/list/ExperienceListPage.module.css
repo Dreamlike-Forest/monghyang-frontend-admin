@@ -150,6 +150,13 @@
   width: 100%;
   height: 200px;
   background-color: #f3f4f6;
+  overflow: hidden;
+}
+
+.productImage img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
 }
 
 .imagePlaceholder {

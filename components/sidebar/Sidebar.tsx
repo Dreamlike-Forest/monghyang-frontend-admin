@@ -31,7 +31,6 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       subMenu: [
         { id: 'experience-register', label: '체험상품 등록' },
         { id: 'experience-list', label: '체험상품 목록' },
-        { id: 'experience-schedule', label: '일정 관리' }
       ]
     },
     {
@@ -40,7 +39,6 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       subMenu: [
         { id: 'reservation-status', label: '예약 현황' },
         { id: 'reservation-phone', label: '전화예약 입력'},
-        { id: 'reservation-block', label: '예약 차단 설정', badge: '준비중' }
       ]
     },
     {
@@ -147,14 +145,12 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
                 onNavigate('settings');
               }}
             >
-              <span>⚙️</span>
               <span>설정</span>
             </button>
             <button 
               className={styles.userMenuItem}
               onClick={handleLogout}
             >
-              <span>🚪</span>
               <span>로그아웃</span>
             </button>
           </div>

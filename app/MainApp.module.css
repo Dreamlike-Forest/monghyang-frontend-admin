@@ -11,6 +11,36 @@
   overflow-y: auto;
 }
 
+.loadingContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f8f9fa;
+}
+
+.loadingContent {
+  text-align: center;
+}
+
+.loadingTitle {
+  font-size: 24px;
+  margin-bottom: 16px;
+  color: #8b5a3c;
+  font-weight: 600;
+}
+
+.loadingText {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.placeholder {
+  padding: 30px;
+  color: #6b7280;
+  font-size: 16px;
+}
+
 @media (max-width: 1024px) {
   .mainContent {
     margin-left: 240px;
