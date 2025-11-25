@@ -8,7 +8,7 @@ import BreweryPage from '../components/brewery/BreweryPage';
 import ExperienceRegisterPage from '../components/experience/register/ExperienceRegisterPage';
 import ExperienceListPage from '../components/experience/list/ExperienceListPage';
 import ReservationStatusPage from '../components/reservations/status/ReservationStatusPage';
-import PhoneReservationPage from '../components/reservations/phone/PhoneReservationPage';
+import OfflineReservationPage from '../components/reservations/Offline/OfflineReservationPage';
 import ProductRegisterPage from '../components/products/register/ProductRegisterPage';
 import ProductListPage from '../components/products/list/ProductListPage';
 import DeliveryManagePage from '../components/products/deliveryManage/DeliveryManagePage';
@@ -22,29 +22,15 @@ type PageKey =
   | 'brewery' 
   | 'experience-register' 
   | 'experience-list'
-  | 'reservation-status' 
-  | 'reservation-phone' 
+  | 'reservation-status'
+  | 'reservation-phone'
+  | 'reservation-offline' 
   | 'reservation-block'
   | 'product-register' 
   | 'product-list' 
   | 'product-delivery'
   | 'statistics' 
   | 'settings';
-
-const PAGES: Record<PageKey, React.ComponentType> = {
-  'dashboard': DashboardPage,
-  'brewery': BreweryPage,
-  'experience-register': ExperienceRegisterPage,
-  'experience-list': ExperienceListPage,
-  'reservation-status': ReservationStatusPage,
-  'reservation-phone': PhoneReservationPage,
-  'reservation-block': () => <Placeholder text="예약 차단 설정" />,
-  'product-register': ProductRegisterPage,
-  'product-list': ProductListPage,
-  'product-delivery': DeliveryManagePage,
-  'statistics': StatisticsPage,
-  'settings': () => <Placeholder text="설정" />,
-};
 
 function LoadingScreen() {
   return (
@@ -65,6 +51,10 @@ export default function MainApp() {
   const [currentPage, setCurrentPage] = useState<PageKey>('dashboard');
   const { isAuthenticated, isLoading } = useAuth();
 
+  const handleNavigate = (page: string) => {
+    setCurrentPage(page as PageKey);
+  };
+
   if (isLoading) {
     return <LoadingScreen />;
   }
@@ -73,13 +63,43 @@ export default function MainApp() {
     return <Login />;
   }
 
-  const PageComponent = PAGES[currentPage] || PAGES.dashboard;
+  const renderPage = () => {
+    switch (currentPage) {
+      case 'dashboard':
+        return <DashboardPage onNavigate={handleNavigate} />;
+      case 'brewery':
+        return <BreweryPage />;
+      case 'experience-register':
+        return <ExperienceRegisterPage />;
+      case 'experience-list':
+        return <ExperienceListPage />;
+      case 'reservation-status':
+        return <ReservationStatusPage />;
+      case 'reservation-phone':
+      case 'reservation-offline':
+        return <OfflineReservationPage />;
+      case 'reservation-block':
+        return <Placeholder text="예약 차단 설정" />;
+      case 'product-register':
+        return <ProductRegisterPage />;
+      case 'product-list':
+        return <ProductListPage />;
+      case 'product-delivery':
+        return <DeliveryManagePage />;
+      case 'statistics':
+        return <StatisticsPage />;
+      case 'settings':
+        return <Placeholder text="설정" />;
+      default:
+        return <DashboardPage onNavigate={handleNavigate} />;
+    }
+  };
 
   return (
     <div className={styles.appContainer}>
-      <Sidebar currentPage={currentPage} onNavigate={(page) => setCurrentPage(page as PageKey)} />
+      <Sidebar currentPage={currentPage} onNavigate={handleNavigate} />
       <main className={styles.mainContent}>
-        <PageComponent />
+        {renderPage()}
       </main>
     </div>
   );
