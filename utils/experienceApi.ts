@@ -250,7 +250,7 @@ export interface ReservationOrder {
   joy_order_payer_phone: string;
   joy_order_created_at: string;
   joy_order_reservation: string;
-  joy_payment_status: 'UNPAID' | 'PENDING' | 'PAID' | 'REFUND' | 'CANCELLED';
+  joy_payment_status: 'PENDING' | 'PAID' | 'CANCELED' | 'FAILED';
 }
 
 export interface ReservationHistoryResponse {
@@ -311,5 +311,173 @@ export const deleteReservation = async (joyOrderId: number): Promise<{ success: 
       return { success: false, error: message || '예약 삭제 중 오류가 발생했습니다.' };
     }
     return { success: false, error: '예약 삭제 중 오류가 발생했습니다.' };
+  }
+};
+
+export interface ManualReservationData {
+  id: number;
+  count: number;
+  payer_name: string;
+  payer_phone: string;
+  reservation_date: string;
+  reservation_time: string;
+  total_amount: number;
+}
+
+export const createManualReservation = async (
+  data: ManualReservationData
+): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const prepareFormData = new FormData();
+    prepareFormData.append('id', String(data.id));
+    prepareFormData.append('count', String(data.count));
+    prepareFormData.append('payer_name', data.payer_name);
+    prepareFormData.append('payer_phone', data.payer_phone);
+    prepareFormData.append('reservation_date', data.reservation_date);
+    prepareFormData.append('reservation_time', data.reservation_time);
+
+    const prepareResponse = await apiClient.post(
+      '/api/joy-order/prepare',
+      prepareFormData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+
+    const pgOrderId = prepareResponse.data.content;
+    const totalAmountFixed = data.total_amount.toFixed(2);
+
+    const requestFormData = new FormData();
+    requestFormData.append('pg_order_id', pgOrderId);
+    requestFormData.append('pg_payment_key', 'MANUAL_RESERVATION_KEY');
+    requestFormData.append('total_amount', totalAmountFixed);
+
+    await apiClient.post(
+      '/api/joy-order/request',
+      requestFormData,
+      { headers: { 'Content-Type': 'multipart/form-data' } }
+    );
+
+    return {
+      success: true,
+      message: '수기 예약이 등록되었습니다.'
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status;
+      const message = error.response?.data?.message;
+      
+      if (status === 500) {
+        return { success: false, error: message || '서버 오류가 발생했습니다.' };
+      }
+      if (status === 400) {
+        return { success: false, error: message || '입력 정보를 확인해주세요.' };
+      }
+      if (status === 404) {
+        return { success: false, error: '체험 프로그램을 찾을 수 없습니다.' };
+      }
+    }
+    return { success: false, error: '예약 등록 중 오류가 발생했습니다.' };
+  }
+};
+
+// 예약 취소(환불) 요청
+export const cancelReservation = async (
+  joyOrderId: number
+): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const response = await apiClient.delete<ApiResponse>(
+      `/api/joy-order/cancel/${joyOrderId}`
+    );
+    return {
+      success: response.status === 200,
+      message: response.data.message || '예약이 취소되었습니다.'
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message;
+      return { success: false, error: message || '예약 취소 중 오류가 발생했습니다.' };
+    }
+    return { success: false, error: '예약 취소 중 오류가 발생했습니다.' };
+  }
+};
+
+// 예약 내역 기록 삭제
+export const deleteReservationHistory = async (
+  joyOrderId: number
+): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const response = await apiClient.delete<ApiResponse>(
+      `/api/joy-order/history/${joyOrderId}`
+    );
+    return {
+      success: response.status === 200,
+      message: response.data.message || '예약 내역이 삭제되었습니다.'
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data?.message;
+      return { success: false, error: message || '예약 내역 삭제 중 오류가 발생했습니다.' };
+    }
+    return { success: false, error: '예약 내역 삭제 중 오류가 발생했습니다.' };
+  }
+};
+
+// 특정 달의 특정 체험의 예약 달력 조회
+export interface CalendarSlotDate {
+  joyId: number;
+  year: number;
+  month: number;
+  impossibleDates: number[];
+}
+
+export interface CalendarSlotDateResponse {
+  status: number;
+  content: CalendarSlotDate;
+}
+
+export const fetchCalendarSlots = async (
+  joyId: number,
+  year: number,
+  month: number
+): Promise<CalendarSlotDate> => {
+  try {
+    const response = await apiClient.get<CalendarSlotDateResponse>(
+      '/api/joy-order/calendar',
+      { params: { joyId, year, month } }
+    );
+    return response.data.content;
+  } catch (error) {
+    console.error('달력 조회 실패:', error);
+    throw error;
+  }
+};
+
+// 특정 날의 시간대별로 예약 가능 인원수 조회
+export interface TimeSlot {
+  time: string;
+  remainingCount: number;
+}
+
+export interface TimeSlotResponse {
+  status: number;
+  content: {
+    joyId: number;
+    date: string;
+    timeList: TimeSlot[];
+  };
+}
+
+export const fetchTimeSlots = async (
+  joyId: number,
+  date: string
+): Promise<TimeSlot[]> => {
+  try {
+    const response = await apiClient.get<TimeSlotResponse>(
+      '/api/joy-order/calendar/time-info',
+      { params: { joyId, date } }
+    );
+    return response.data.content.timeList;
+  } catch (error) {
+    console.error('시간대별 예약 정보 조회 실패:', error);
+    throw error;
   }
 };

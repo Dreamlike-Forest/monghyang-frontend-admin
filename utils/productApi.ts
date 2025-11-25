@@ -1,7 +1,6 @@
 import apiClient from './api';
 import axios from 'axios';
 
-// 기존 제품 등록 인터페이스 (유지)
 export interface ProductFormData {
   name: string;
   alcohol: string;
@@ -27,7 +26,6 @@ export interface ApiResponse {
   message: string;
 }
 
-// 제품 목록 조회용 인터페이스 (백엔드 구조에 맞춤)
 export interface Product {
   product_id: number;
   users_nickname: string;
@@ -94,7 +92,6 @@ const createProductFormData = (formData: ProductFormData, images: File[]): FormD
   return formDataToSend;
 };
 
-// 기존 제품 등록 함수 (유지)
 export const registerProduct = async (
   formData: ProductFormData,
   images: File[]
@@ -154,7 +151,6 @@ export const registerProduct = async (
   }
 };
 
-// 기존 제품 수정 함수 (유지)
 export const updateProduct = async (
   productId: number,
   formData: ProductFormData,
@@ -235,7 +231,6 @@ export const updateProduct = async (
   }
 };
 
-// 기존 제품 삭제 함수 (유지)
 export const deleteProduct = async (
   productId: number
 ): Promise<{ success: boolean; message?: string; error?: string }> => {
@@ -281,7 +276,6 @@ export const deleteProduct = async (
   }
 };
 
-// 기존 제품 복구 함수 (유지)
 export const restoreProduct = async (
   productId: number
 ): Promise<{ success: boolean; message?: string; error?: string }> => {
@@ -311,7 +305,64 @@ export const restoreProduct = async (
   }
 };
 
-// 제품 목록 조회 (백엔드 API에 맞춤)
+export const increaseInventory = async (
+  productId: number,
+  quantity: number
+): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const response = await apiClient.post<ApiResponse>(
+      `/api/seller-priv/product-inc-inven/${productId}/${quantity}`
+    );
+
+    if (response.status === 200) {
+      return {
+        success: true,
+        message: response.data.message || `재고가 ${quantity}개 증가했습니다.`,
+      };
+    }
+
+    return {
+      success: false,
+      error: '재고 증가에 실패했습니다.',
+    };
+  } catch (error) {
+    console.error('재고 증가 오류:', error);
+    return {
+      success: false,
+      error: '재고 증가 중 오류가 발생했습니다.',
+    };
+  }
+};
+
+export const decreaseInventory = async (
+  productId: number,
+  quantity: number
+): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const response = await apiClient.post<ApiResponse>(
+      `/api/seller-priv/product-dec-inven/${productId}/${quantity}`
+    );
+
+    if (response.status === 200) {
+      return {
+        success: true,
+        message: response.data.message || `재고가 ${quantity}개 감소했습니다.`,
+      };
+    }
+
+    return {
+      success: false,
+      error: '재고 감소에 실패했습니다.',
+    };
+  } catch (error) {
+    console.error('재고 감소 오류:', error);
+    return {
+      success: false,
+      error: '재고 감소 중 오류가 발생했습니다.',
+    };
+  }
+};
+
 export const getProducts = async (params?: {
   userId?: number;
   startOffset?: number;
@@ -325,13 +376,11 @@ export const getProducts = async (params?: {
   try {
     let url = '/api/product/latest/0';
     
-    // userId가 있으면 특정 판매자의 제품 조회
     if (params?.userId) {
       const offset = params.startOffset || 0;
       url = `/api/product/by-user/${params.userId}/${offset}`;
     } else if (params?.keyword || params?.min_price || params?.max_price || 
                params?.min_alcohol || params?.max_alcohol || params?.tag_id_list) {
-      // 필터 검색
       const offset = params.startOffset || 0;
       url = `/api/product/search/${offset}`;
       
@@ -361,7 +410,16 @@ export const getProducts = async (params?: {
   }
 };
 
-// 제품 상세 조회
+export const getMyProducts = async (startOffset: number = 0): Promise<ProductListResponse> => {
+  try {
+    const response = await apiClient.get(`/api/seller-priv/product/my/${startOffset}`);
+    return response.data.content;
+  } catch (error) {
+    console.error('내 제품 목록 조회 오류:', error);
+    throw error;
+  }
+};
+
 export const getProduct = async (id: number): Promise<ProductDetail> => {
   try {
     const response = await apiClient.get(`/api/product/${id}`);
@@ -372,14 +430,97 @@ export const getProduct = async (id: number): Promise<ProductDetail> => {
   }
 };
 
-// 품절 상태 토글
-export const toggleProductSoldout = async (id: number): Promise<Product> => {
+export const setSoldout = async (
+  productId: number
+): Promise<{ success: boolean; message?: string; error?: string }> => {
   try {
-    // 백엔드에 품절 토글 API가 없으므로, product-update API를 사용해야 함
-    // 실제로는 백엔드에 토글 API를 추가하거나, 수정 API를 호출해야 함
-    throw new Error('품절 상태 변경은 제품 수정 API를 통해 수행해야 합니다.');
+    const response = await apiClient.post<ApiResponse>(
+      `/api/seller-priv/product-set-soldout/${productId}`
+    );
+
+    if (response.status === 200) {
+      return {
+        success: true,
+        message: response.data.message || '상품이 품절 처리되었습니다.',
+      };
+    }
+
+    return {
+      success: false,
+      error: '품절 처리에 실패했습니다.',
+    };
   } catch (error) {
-    console.error('상태 토글 오류:', error);
-    throw error;
+    console.error('품절 처리 오류:', error);
+    return {
+      success: false,
+      error: '품절 처리 중 오류가 발생했습니다.',
+    };
+  }
+};
+
+export const unsetSoldout = async (
+  productId: number
+): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const response = await apiClient.post<ApiResponse>(
+      `/api/seller-priv/product-unset-soldout/${productId}`
+    );
+
+    if (response.status === 200) {
+      return {
+        success: true,
+        message: response.data.message || '품절이 해제되었습니다.',
+      };
+    }
+
+    return {
+      success: false,
+      error: '품절 해제에 실패했습니다.',
+    };
+  } catch (error) {
+    console.error('품절 해제 오류:', error);
+    return {
+      success: false,
+      error: '품절 해제 중 오류가 발생했습니다.',
+    };
+  }
+};
+
+export const updateInventory = async (
+  productId: number,
+  inventory: number
+): Promise<{ success: boolean; message?: string; error?: string }> => {
+  try {
+    const formData = new FormData();
+    formData.append('id', String(productId));
+    formData.append('inventory', String(inventory));
+
+    const response = await apiClient.post<ApiResponse>(
+      '/api/seller-priv/product-update',
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      return {
+        success: true,
+        message: response.data.message || '재고가 수정되었습니다.',
+      };
+    }
+
+    return {
+      success: false,
+      error: '재고 수정에 실패했습니다.',
+    };
+  } catch (error) {
+    console.error('재고 수정 오류:', error);
+    return {
+      success: false,
+      error: '재고 수정 중 오류가 발생했습니다.',
+    };
   }
 };

@@ -1,10 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import StatCard from './StatCard';
-import ReservationTable from './ReservationTable';
+import TodayScheduleTable from './TodayScheduleTable';
 import QuickActions from './QuickActions';
-import TodaySchedule from './TodaySchedule';
+import { fetchDashboardData, DashboardData } from '../../utils/statisticsApi';
 import styles from './DashboardPage.module.css';
 
 interface StatData {
@@ -16,39 +16,77 @@ interface StatData {
   iconType: 'calendar' | 'package' | 'trending';
 }
 
-export default function DashboardPage() {
-  const stats: StatData[] = [
+interface DashboardPageProps {
+  onNavigate: (page: string) => void;
+}
+
+export default function DashboardPage({ onNavigate }: DashboardPageProps) {
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const data = await fetchDashboardData();
+      setDashboardData(data);
+    } catch (error) {
+      console.error('대시보드 데이터 로딩 실패:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('ko-KR', {
+      style: 'currency',
+      currency: 'KRW'
+    }).format(amount);
+  };
+
+  const stats: StatData[] = dashboardData ? [
     {
-      id: 'reservations',
-      title: '이번 달 예약',
-      value: '89건',
-      change: '+23.1%',
+      id: 'today-revenue',
+      title: '오늘 매출',
+      value: formatCurrency(dashboardData.stats.todayRevenue),
+      change: '',
       isPositive: true,
-      iconType: 'calendar'
+      iconType: 'trending'
     },
     {
-      id: 'products',
-      title: '전통주 판매',
-      value: '456개',
-      change: '-5.3%',
-      isPositive: false,
+      id: 'today-orders',
+      title: '오늘 주문',
+      value: `${dashboardData.stats.todayOrderCount}건`,
+      change: '',
+      isPositive: true,
       iconType: 'package'
     },
     {
-      id: 'revenue',
-      title: '월 매출',
-      value: '₩15,234,000',
-      change: '+18.2%',
+      id: 'today-reservations',
+      title: '오늘 예약',
+      value: `${dashboardData.stats.todayJoyReservationCount}건`,
+      change: '',
       isPositive: true,
-      iconType: 'trending'
+      iconType: 'calendar'
     }
-  ];
+  ] : [];
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.pageTitle}>대시보드</h1>
+        <div className={styles.loadingText}>데이터를 불러오는 중...</div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
       <h1 className={styles.pageTitle}>대시보드</h1>
 
-      {/* 통계 카드 섹션 */}
       <section className={styles.statsSection}>
         {stats.map(stat => (
           <StatCard 
@@ -62,17 +100,13 @@ export default function DashboardPage() {
         ))}
       </section>
 
-      {/* 메인 콘텐츠 그리드 */}
       <div className={styles.mainGrid}>
-        {/* 왼쪽: 예약 테이블 */}
         <section className={styles.leftSection}>
-          <ReservationTable />
+          <TodayScheduleTable schedule={dashboardData?.todaySchedule || []} />
         </section>
 
-        {/* 오른쪽: 퀵 액션 & 오늘 일정 */}
         <aside className={styles.rightSection}>
-          <QuickActions />
-          <TodaySchedule />
+          <QuickActions onNavigate={onNavigate} />
         </aside>
       </div>
     </div>

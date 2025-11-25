@@ -1,14 +1,29 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Package, Edit2, Trash2, Search, AlertTriangle, XCircle, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
+import { Package, Edit2, Trash2, Search, AlertTriangle, XCircle, ChevronLeft, ChevronRight, Camera, ToggleLeft, ToggleRight, Plus, Minus, RotateCcw, X } from 'lucide-react';
 import styles from './ProductListPage.module.css';
 import { 
-  getProducts, 
-  getProduct,
+  getMyProducts,
+  deleteProduct,
+  restoreProduct,
+  setSoldout,
+  unsetSoldout,
+  increaseInventory,
+  decreaseInventory,
   Product,
   ProductListResponse
 } from '../../../utils/productApi';
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://16.184.16.198:61234';
+
+type ModalType = 'increase' | 'decrease' | null;
+
+interface InventoryModalData {
+  productId: number;
+  productName: string;
+  type: ModalType;
+}
 
 export default function ProductListPage() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -16,41 +31,35 @@ export default function ProductListPage() {
   const [error, setError] = useState<string | null>(null);
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterType, setFilterType] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
   
   const [currentPage, setCurrentPage] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
 
+  const [modalOpen, setModalOpen] = useState(false);
+  const [modalData, setModalData] = useState<InventoryModalData | null>(null);
+  const [quantity, setQuantity] = useState<number>(1);
+
   useEffect(() => {
     loadProducts();
-  }, [currentPage, filterStatus, searchTerm]);
+  }, [currentPage, filterStatus]);
 
   const loadProducts = async () => {
     try {
       setLoading(true);
       setError(null);
-      
-      // 현재 로그인한 사용자의 userId를 가져와야 함
-      // localStorage나 세션에서 userId를 가져오는 로직 필요
-      const userData = localStorage.getItem('userData');
-      const userId = userData ? JSON.parse(userData).id : null;
 
-      if (!userId) {
-        setError('로그인이 필요합니다.');
-        setLoading(false);
-        return;
-      }
+      const response = await getMyProducts(currentPage);
 
-      const response = await getProducts({
-        userId,
-        startOffset: currentPage,
-        keyword: searchTerm || undefined,
-      });
-
-      // 품절 필터링 (클라이언트 사이드)
       let filteredProducts = response.content;
+      
+      if (searchTerm) {
+        filteredProducts = filteredProducts.filter(p => 
+          p.product_name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+      
       if (filterStatus === 'active') {
         filteredProducts = filteredProducts.filter(p => !p.product_is_soldout);
       } else if (filterStatus === 'inactive') {
@@ -62,20 +71,40 @@ export default function ProductListPage() {
       setTotalPages(response.totalPages);
     } catch (err: any) {
       console.error('제품 목록 조회 실패:', err);
-      setError(err.response?.data?.message || '제품 목록을 불러오는데 실패했습니다.');
+      setError(err.response?.data?.message || '제품 목록을 불러오는데 실패했습니다. 로그인 상태를 확인해주세요.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleToggleSoldout = async (product: Product) => {
+    try {
+      let result;
+      if (product.product_is_soldout) {
+        result = await unsetSoldout(product.product_id);
+      } else {
+        result = await setSoldout(product.product_id);
+      }
+      
+      if (result.success) {
+        alert(result.message);
+        loadProducts();
+      } else {
+        alert(result.error);
+      }
+    } catch (err: any) {
+      console.error('품절 상태 변경 실패:', err);
+      alert('품절 상태 변경에 실패했습니다.');
     }
   };
 
   const handleDelete = async (id: number, name: string) => {
     if (confirm(`'${name}'을(를) 삭제하시겠습니까?`)) {
       try {
-        const { deleteProduct } = await import('../../../utils/productApi');
         const result = await deleteProduct(id);
         if (result.success) {
           alert(result.message);
-          loadProducts(); // 목록 새로고침
+          loadProducts();
         } else {
           alert(result.error);
         }
@@ -86,9 +115,67 @@ export default function ProductListPage() {
     }
   };
 
+  const handleRestore = async (id: number, name: string) => {
+    if (confirm(`'${name}'을(를) 복구하시겠습니까?`)) {
+      try {
+        const result = await restoreProduct(id);
+        if (result.success) {
+          alert(result.message);
+          loadProducts();
+        } else {
+          alert(result.error);
+        }
+      } catch (err: any) {
+        console.error('복구 실패:', err);
+        alert('제품 복구에 실패했습니다.');
+      }
+    }
+  };
+
+  const openInventoryModal = (product: Product, type: 'increase' | 'decrease') => {
+    setModalData({
+      productId: product.product_id,
+      productName: product.product_name,
+      type
+    });
+    setQuantity(1);
+    setModalOpen(true);
+  };
+
+  const closeInventoryModal = () => {
+    setModalOpen(false);
+    setModalData(null);
+    setQuantity(1);
+  };
+
+  const handleInventorySubmit = async () => {
+    if (!modalData || quantity <= 0) {
+      alert('수량을 올바르게 입력해주세요.');
+      return;
+    }
+
+    try {
+      let result;
+      if (modalData.type === 'increase') {
+        result = await increaseInventory(modalData.productId, quantity);
+      } else {
+        result = await decreaseInventory(modalData.productId, quantity);
+      }
+
+      if (result.success) {
+        alert(result.message);
+        closeInventoryModal();
+        loadProducts();
+      } else {
+        alert(result.error);
+      }
+    } catch (err: any) {
+      console.error('재고 변경 실패:', err);
+      alert('재고 변경에 실패했습니다.');
+    }
+  };
+
   const handleEdit = (product: Product) => {
-    // 제품 수정 페이지로 이동
-    // router.push(`/products/edit/${product.product_id}`);
     alert('제품 수정 기능은 제품 등록 페이지를 이용해주세요.');
   };
 
@@ -101,6 +188,11 @@ export default function ProductListPage() {
     if (page >= 0 && page < totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  const getImageUrl = (imageKey: string | undefined) => {
+    if (!imageKey) return '';
+    return `${API_BASE_URL}/api/image/${imageKey}`;
   };
 
   const soldoutCount = products.filter(p => p.product_is_soldout).length;
@@ -226,7 +318,13 @@ export default function ProductListPage() {
                   <td>
                     <div className={styles.productImage}>
                       {product.image_key ? (
-                        <img src={product.image_key} alt={product.product_name} />
+                        <img 
+                          src={getImageUrl(product.image_key)} 
+                          alt={product.product_name}
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
+                        />
                       ) : (
                         <Camera size={24} color="#9ca3af" />
                       )}
@@ -249,12 +347,40 @@ export default function ProductListPage() {
                     </span>
                   </td>
                   <td>
-                    <span className={product.product_is_soldout ? styles.soldoutBadge : styles.activeBadge}>
-                      {product.product_is_soldout ? '품절' : '판매중'}
-                    </span>
+                    <button
+                      className={`${styles.toggleBtn} ${product.product_is_soldout ? styles.soldout : styles.active}`}
+                      onClick={() => handleToggleSoldout(product)}
+                      title={product.product_is_soldout ? '품절 해제하기' : '품절 처리하기'}
+                    >
+                      {product.product_is_soldout ? (
+                        <>
+                          <ToggleLeft size={16} />
+                          <span>품절</span>
+                        </>
+                      ) : (
+                        <>
+                          <ToggleRight size={16} />
+                          <span>판매중</span>
+                        </>
+                      )}
+                    </button>
                   </td>
                   <td>
                     <div className={styles.actionButtons}>
+                      <button 
+                        className={styles.increaseBtn}
+                        onClick={() => openInventoryModal(product, 'increase')}
+                        title="재고 입고"
+                      >
+                        <Plus size={16} />
+                      </button>
+                      <button 
+                        className={styles.decreaseBtn}
+                        onClick={() => openInventoryModal(product, 'decrease')}
+                        title="재고 출고"
+                      >
+                        <Minus size={16} />
+                      </button>
                       <button 
                         className={styles.editBtn}
                         onClick={() => handleEdit(product)}
@@ -268,6 +394,13 @@ export default function ProductListPage() {
                         title="삭제"
                       >
                         <Trash2 size={16} />
+                      </button>
+                      <button 
+                        className={styles.restoreBtn}
+                        onClick={() => handleRestore(product.product_id, product.product_name)}
+                        title="복구"
+                      >
+                        <RotateCcw size={16} />
                       </button>
                     </div>
                   </td>
@@ -311,6 +444,45 @@ export default function ProductListPage() {
           <ChevronRight size={16} />
         </button>
       </div>
+
+      {modalOpen && modalData && (
+        <div className={styles.modal} onClick={closeInventoryModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+              <h2>{modalData.type === 'increase' ? '재고 입고' : '재고 출고'}</h2>
+              <button className={styles.modalClose} onClick={closeInventoryModal}>
+                <X size={20} />
+              </button>
+            </div>
+            <div className={styles.modalBody}>
+              <div className={styles.productInfo}>
+                <strong>{modalData.productName}</strong>
+              </div>
+              <div className={styles.formGroup}>
+                <label className={styles.label}>
+                  {modalData.type === 'increase' ? '입고' : '출고'} 수량
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={quantity}
+                  onChange={(e) => setQuantity(parseInt(e.target.value) || 1)}
+                  className={styles.input}
+                  placeholder="수량을 입력하세요"
+                />
+              </div>
+            </div>
+            <div className={styles.modalFooter}>
+              <button className={styles.cancelBtn} onClick={closeInventoryModal}>
+                취소
+              </button>
+              <button className={styles.submitBtn} onClick={handleInventorySubmit}>
+                {modalData.type === 'increase' ? '입고' : '출고'} 처리
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

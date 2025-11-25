@@ -9,39 +9,47 @@ interface QuickAction {
   label: string;
   icon: React.ReactNode;
   color: string;
+  pageId: string;
 }
 
-export default function QuickActions() {
+interface QuickActionsProps {
+  onNavigate: (page: string) => void;
+}
+
+export default function QuickActions({ onNavigate }: QuickActionsProps) {
   const actions: QuickAction[] = [
     {
       id: 'new-reservation',
-      label: '예약 추가',
+      label: '수기 예약',
       icon: <Plus size={20} />,
-      color: '#8b5a3c'
+      color: '#8b5a3c',
+      pageId: 'reservation-phone'
     },
     {
       id: 'view-schedule',
-      label: '일정 확인',
+      label: '예약 현황',
       icon: <Calendar size={20} />,
-      color: '#d97129'
+      color: '#d97129',
+      pageId: 'reservation-status'
     },
     {
       id: 'add-product',
       label: '상품 등록',
       icon: <Package size={20} />,
-      color: '#6b7280'
+      color: '#6b7280',
+      pageId: 'product-register'
     },
     {
       id: 'view-stats',
       label: '통계 보기',
       icon: <BarChart3 size={20} />,
-      color:'#10b981'
+      color:'#10b981',
+      pageId: 'statistics'
     }
   ];
 
-  const handleAction = (id: string) => {
-    console.log(`Quick action clicked: ${id}`);
-    // 실제 구현 시 각 액션에 맞는 동작 추가
+  const handleAction = (pageId: string) => {
+    onNavigate(pageId);
   };
 
   return (
@@ -52,7 +60,7 @@ export default function QuickActions() {
           <button
             key={action.id}
             className={styles.actionButton}
-            onClick={() => handleAction(action.id)}
+            onClick={() => handleAction(action.pageId)}
             style={{ borderColor: action.color }}
           >
             <div 

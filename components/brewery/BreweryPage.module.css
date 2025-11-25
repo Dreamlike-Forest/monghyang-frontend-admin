@@ -120,6 +120,27 @@
   margin-bottom: 8px;
 }
 
+.value {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: #1f2937;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.value a {
+  color: #7a3118;
+  text-decoration: none;
+}
+
+.value a:hover {
+  text-decoration: underline;
+}
+
 .input {
   width: 100%;
   padding: 12px 16px;
@@ -174,6 +195,10 @@
   accent-color: #7a3118;
 }
 
+.checkbox:disabled {
+  cursor: default;
+}
+
 .imageUploadArea {
   display: flex;
   align-items: center;
@@ -194,6 +219,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s;
+  border: none;
 }
 
 .uploadButton:hover {
@@ -293,5 +319,15 @@
 
   .imagePreviewGrid {
     grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .formActions {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .submitButton {
+    width: 100%;
+    margin-right: 0 !important;
   }
 }

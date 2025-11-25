@@ -38,7 +38,7 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       label: '예약 관리',
       subMenu: [
         { id: 'reservation-status', label: '예약 현황' },
-        { id: 'reservation-phone', label: '전화예약 입력'},
+        { id: 'reservation-offline', label: '직접 예약 입력'},
       ]
     },
     {
