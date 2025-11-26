@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import StatCard from './StatCard';
 import TodayScheduleTable from './TodayScheduleTable';
 import QuickActions from './QuickActions';
-import { fetchDashboardData, DashboardData } from '../../utils/statisticsApi';
+import { fetchDashboardData, DashboardData } from '../../utils/dashboardApi';
 import styles from './DashboardPage.module.css';
 
 interface StatData {
@@ -23,6 +23,7 @@ interface DashboardPageProps {
 export default function DashboardPage({ onNavigate }: DashboardPageProps) {
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadDashboardData();
@@ -31,10 +32,12 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
+      setError(null);
       const data = await fetchDashboardData();
       setDashboardData(data);
-    } catch (error) {
-      console.error('대시보드 데이터 로딩 실패:', error);
+    } catch (err) {
+      console.error('대시보드 데이터 로딩 실패:', err);
+      setError('데이터를 불러오는 중 오류가 발생했습니다.');
     } finally {
       setLoading(false);
     }
@@ -79,6 +82,18 @@ export default function DashboardPage({ onNavigate }: DashboardPageProps) {
       <div className={styles.container}>
         <h1 className={styles.pageTitle}>대시보드</h1>
         <div className={styles.loadingText}>데이터를 불러오는 중...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.pageTitle}>대시보드</h1>
+        <div className={styles.loadingText}>{error}</div>
+        <button onClick={loadDashboardData} style={{ marginTop: '1rem' }}>
+          다시 시도
+        </button>
       </div>
     );
   }

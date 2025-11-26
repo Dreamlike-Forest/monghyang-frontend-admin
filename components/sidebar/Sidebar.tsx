@@ -47,6 +47,7 @@ export default function Sidebar({ currentPage, onNavigate }: SidebarProps) {
       subMenu: [
         { id: 'product-register', label: '제품 등록'},
         { id: 'product-list', label: '제품 관리'},
+        { id: 'product-delivery', label: '주문/배송 관리'},
       ]
     },
     { id: 'statistics', label: '통계' },
